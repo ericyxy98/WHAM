@@ -6,6 +6,8 @@ outputs = runner(
     video="tmp/cljwno0m600043n6lq54umusu.mp4",
     pose_data="tmp/cljwno0m600043n6lq54umusu_pose.npz",
     output_dir="output/inference",
+    run_slam=True,
+    slam_script="third-party/DPVO/demo.py",
 )
 
 # Render a simple multiview visualization from the inference output.
