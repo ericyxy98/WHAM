@@ -11,6 +11,8 @@ import numpy as np
 import torch
 from loguru import logger
 
+from wham.slam import run_dpvo
+
 from configs.config import get_cfg_defaults
 from lib.data.datasets import CustomDataset
 from lib.models import build_body_model, build_network
@@ -153,6 +155,12 @@ def run_inference(
     save_npz: bool = True,
     save_pkl: bool = True,
     slam_results: str | Path | np.ndarray | None = None,
+    run_slam: bool = False,
+    slam_script: str | Path | None = None,
+    slam_config: str | Path | None = None,
+    slam_checkpoint: str | Path | None = None,
+    slam_output_name: str = "dpvo_traj.npy",
+    slam_extra_args: list[str] | None = None,
 ) -> InferenceOutput:
     cfg = prepare_cfg(config_path, device=device, flip_eval=flip_eval)
 
@@ -178,6 +186,18 @@ def run_inference(
 
     if length <= 0:
         length = int(frame_ids.max()) + 1
+
+    if slam_results is None and run_slam:
+        slam_results = run_dpvo(
+            video=video,
+            output_dir=output_dir,
+            device=device,
+            config=slam_config,
+            checkpoint=slam_checkpoint,
+            dpvo_script=slam_script,
+            output_name=slam_output_name,
+            extra_args=slam_extra_args,
+        )
 
     slam_results = _load_slam_results(slam_results, length)
 
@@ -269,6 +289,12 @@ class WHAMInference:
         save_npz: bool = True,
         save_pkl: bool = True,
         slam_results: str | Path | np.ndarray | None = None,
+        run_slam: bool = False,
+        slam_script: str | Path | None = None,
+        slam_config: str | Path | None = None,
+        slam_checkpoint: str | Path | None = None,
+        slam_output_name: str = "dpvo_traj.npy",
+        slam_extra_args: list[str] | None = None,
     ) -> InferenceOutput:
         return run_inference(
             video=video,
@@ -280,6 +306,12 @@ class WHAMInference:
             save_npz=save_npz,
             save_pkl=save_pkl,
             slam_results=slam_results,
+            run_slam=run_slam,
+            slam_script=slam_script,
+            slam_config=slam_config,
+            slam_checkpoint=slam_checkpoint,
+            slam_output_name=slam_output_name,
+            slam_extra_args=slam_extra_args,
         )
 
 
@@ -308,6 +340,36 @@ def main() -> None:
         default=None,
         help="Optional SLAM trajectory (npy/npz) with shape (T, 7): xyz + quat(x,y,z,w).",
     )
+    parser.add_argument(
+        "--run-slam",
+        action="store_true",
+        help="Run DPVO SLAM to generate a trajectory when --slam-results is not provided.",
+    )
+    parser.add_argument(
+        "--slam-script",
+        default=None,
+        help="Path to the DPVO demo script (overrides DPVO_SCRIPT env var).",
+    )
+    parser.add_argument(
+        "--slam-config",
+        default=None,
+        help="Optional DPVO config path passed to the DPVO script.",
+    )
+    parser.add_argument(
+        "--slam-checkpoint",
+        default=None,
+        help="Optional DPVO checkpoint path passed to the DPVO script.",
+    )
+    parser.add_argument(
+        "--slam-output-name",
+        default="dpvo_traj.npy",
+        help="Filename for DPVO output inside the output directory.",
+    )
+    parser.add_argument(
+        "--slam-extra-args",
+        nargs=argparse.REMAINDER,
+        help="Additional args forwarded to the DPVO script.",
+    )
     parser.add_argument("--no-npz", action="store_true", help="Disable NPZ output.")
     parser.add_argument("--no-pkl", action="store_true", help="Disable PKL output.")
 
@@ -322,6 +384,12 @@ def main() -> None:
         save_npz=not args.no_npz,
         save_pkl=not args.no_pkl,
         slam_results=args.slam_results,
+        run_slam=args.run_slam,
+        slam_script=args.slam_script,
+        slam_config=args.slam_config,
+        slam_checkpoint=args.slam_checkpoint,
+        slam_output_name=args.slam_output_name,
+        slam_extra_args=args.slam_extra_args,
     )
 
 

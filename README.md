@@ -19,6 +19,17 @@ pip install --upgrade pip
 pip install -e .
 ```
 
+### DPVO (SLAM) Setup
+
+To enable the optional DPVO SLAM integration, clone DPVO into `third-party/DPVO` and follow the DPVO README to install its dependencies and download model checkpoints:
+
+```bash
+git clone https://github.com/princeton-vl/DPVO.git third-party/DPVO
+pip install -r third-party/DPVO/requirements.txt
+```
+
+Once installed, point WHAM to the DPVO demo script via `--slam-script` or the `DPVO_SCRIPT` environment variable (for example, `third-party/DPVO/demo.py`).
+
 For visualization (4-view rendering), install the optional dependencies:
 
 ```bash
@@ -72,6 +83,21 @@ wham-infer \
   --pose-data /path/to/pose_data.npz \
   --output-dir output/inference
 ```
+
+#### Optional SLAM (DPVO)
+
+WHAM can run DPVO to generate a SLAM trajectory and feed it into inference:
+
+```bash
+wham-infer \
+  --video /path/to/video.mp4 \
+  --pose-data /path/to/pose_data.npz \
+  --output-dir output/inference \
+  --run-slam \
+  --slam-script /path/to/dpvo/demo.py
+```
+
+Set `DPVO_SCRIPT=/path/to/dpvo/demo.py` instead of `--slam-script` if preferred. The DPVO output will be written into the output directory (default name: `dpvo_traj.npy`) and consumed automatically.
 
 The command writes:
 
