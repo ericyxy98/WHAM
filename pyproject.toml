@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wham"
+version = "0.1.0"
+description = "WHAM inference and SMPL visualization tooling."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "torch==2.5.1",
+    "numpy>=1.23.5",
+    "opencv-python>=4.8",
+    "scikit-image>=0.21",
+    "scipy>=1.10",
+    "yacs>=0.1.8",
+    "joblib>=1.3",
+    "imageio[ffmpeg]>=2.31",
+    "smplx>=0.1.28",
+    "progress>=1.6",
+    "einops>=0.6",
+    "timm>=0.9",
+    "loguru>=0.7",
+]
+
+[project.optional-dependencies]
+viz = ["pytorch3d>=0.7.7"]
+
+[project.scripts]
+wham-infer = "wham.inference:main"
+wham-render = "wham.visualize:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["wham*", "lib*", "configs*"]
+
+[tool.setuptools.package-data]
+configs = ["yamls/*.yaml"]

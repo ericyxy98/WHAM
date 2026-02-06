@@ -4,10 +4,9 @@ EXP_NAME: 'demo'
 OUTPUT_DIR: 'experiments/'
 NUM_WORKERS: 0
 MODEL_CONFIG: 'configs/yamls/model_base.yaml'
-FLIP_EVAL: True
+FLIP_EVAL: False
 
 TRAIN:
-  STAGE: 'stage2'
   CHECKPOINT: 'checkpoints/wham_vit_bedlam_w_3dpw.pth.tar'
 
 MODEL:
