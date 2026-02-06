@@ -26,6 +26,11 @@ dependencies = [
 
 [project.optional-dependencies]
 viz = ["pytorch3d>=0.7.7"]
+slam = [
+    "matplotlib>=3.8",
+    "torchvision>=0.20",
+    "tqdm>=4.66",
+]
 
 [project.scripts]
 wham-infer = "wham.inference:main"
