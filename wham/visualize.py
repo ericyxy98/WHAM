@@ -46,8 +46,11 @@ def _compute_camera_transforms(
 ) -> tuple[torch.Tensor, torch.Tensor]:
     from pytorch3d.renderer.cameras import look_at_rotation
 
+    device = centers.device
+    centers = centers.to(device)
+    offset = offset.to(device)
     positions = centers + offset
-    rotation = look_at_rotation(positions, centers).mT
+    rotation = look_at_rotation(positions, centers).mT.to(device)
     translation = -(rotation @ positions.unsqueeze(-1)).squeeze(-1)
     return rotation, translation
 
@@ -62,8 +65,8 @@ def render_multiview_video(
 ) -> Path:
     smpl_output = _load_smpl_output(smpl_output_path, subject_id=subject_id)
     pose = smpl_output["pose"]
-    betas = smpl_output["betas"]
     trans = smpl_output["trans"]
+    betas = smpl_output["betas"]
 
     frames = pose.shape[0]
     betas = _broadcast_to_frames(np.asarray(betas), frames)

@@ -21,9 +21,14 @@ class Normalizer:
             kp_2d = kp_2d.numpy()
             bbox = bbox.numpy()
         
-        out_kp_2d = np.zeros_like(kp_2d)
+        if kp_2d.shape[-1] == 3:
+            kp_xy = kp_2d[..., :2]
+        else:
+            kp_xy = kp_2d
+
+        out_kp_2d = np.zeros_like(kp_xy)
         for idx in range(len(out_kp_2d)):
-            out_kp_2d[idx] = transform_keypoints(kp_2d[idx], bbox[idx][:3], patch_width, patch_height)[0]
+            out_kp_2d[idx] = transform_keypoints(kp_xy[idx], bbox[idx][:3], patch_width, patch_height)[0]
             out_kp_2d[idx] = normalize_keypoints_to_patch(out_kp_2d[idx], patch_width)
         
         if to_torch:

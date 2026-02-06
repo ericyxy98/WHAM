@@ -3,6 +3,36 @@ from __future__ import print_function
 from __future__ import division
 
 import os, sys
+import inspect
+import numpy as np
+
+# Chumpy uses inspect.getargspec which was removed in Python 3.11.
+# Provide a minimal shim to keep smplx imports working.
+if not hasattr(inspect, "getargspec"):
+    from collections import namedtuple
+
+    ArgSpec = namedtuple("ArgSpec", "args varargs keywords defaults")
+
+    def getargspec(func):  # type: ignore[override]
+        spec = inspect.getfullargspec(func)
+        return ArgSpec(spec.args, spec.varargs, spec.varkw, spec.defaults)
+
+    inspect.getargspec = getargspec  # type: ignore[attr-defined]
+
+# NumPy 2.0 removed legacy type aliases used by chumpy.
+# Provide minimal aliases so chumpy imports on newer NumPy.
+_numpy_aliases = {
+    "bool": bool,
+    "int": int,
+    "float": float,
+    "complex": complex,
+    "object": object,
+    "str": str,
+    "unicode": str,
+}
+for _name, _alias in _numpy_aliases.items():
+    if not hasattr(np, _name):
+        setattr(np, _name, _alias)
 
 import torch
 import numpy as np

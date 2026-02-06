@@ -62,8 +62,9 @@ class FeatureExtractor(object):
                 
                 norm_img, crop_img = process_image(img[..., ::-1], [cx, cy], scale, patch_h, patch_w)
                 norm_img = torch.from_numpy(norm_img).unsqueeze(0).to(self.device)
-                feature = self.model(norm_img, encode=True)
-                tracking_results[_id]['features'].append(feature.cpu())
+                with torch.no_grad():
+                    feature = self.model(norm_img, encode=True)
+                tracking_results[_id]['features'].append(feature.detach().cpu())
                 
                 if frame_id2 == 0: # First frame of this subject
                     tracking_results = self.predict_init(norm_img, tracking_results, _id, flip_eval=False)
@@ -76,8 +77,9 @@ class FeatureExtractor(object):
                     flipped_keypoints = flip_kp(keypoints, width)
                     tracking_results[_id]['flipped_keypoints'].append(flipped_keypoints)
                     
-                    flipped_features = self.model(torch.flip(norm_img, (3, )), encode=True)
-                    tracking_results[_id]['flipped_features'].append(flipped_features.cpu())
+                    with torch.no_grad():
+                        flipped_features = self.model(torch.flip(norm_img, (3, )), encode=True)
+                    tracking_results[_id]['flipped_features'].append(flipped_features.detach().cpu())
                     
                     if frame_id2 == 0:
                         tracking_results = self.predict_init(torch.flip(norm_img, (3, )), tracking_results, _id, flip_eval=True)
@@ -90,7 +92,8 @@ class FeatureExtractor(object):
     def predict_init(self, norm_img, tracking_results, _id, flip_eval=False):
         prefix = 'flipped_' if flip_eval else ''
         
-        pred_global_orient, pred_body_pose, pred_betas, _ = self.model(norm_img, encode=False)
+        with torch.no_grad():
+            pred_global_orient, pred_body_pose, pred_betas, _ = self.model(norm_img, encode=False)
         tracking_results[_id][prefix + 'init_global_orient'] = pred_global_orient.cpu()
         tracking_results[_id][prefix + 'init_body_pose'] = pred_body_pose.cpu()
         tracking_results[_id][prefix + 'init_betas'] = pred_betas.cpu()

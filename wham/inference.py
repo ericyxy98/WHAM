@@ -83,6 +83,45 @@ def _bboxes_to_cxcys(bboxes: np.ndarray, scale_factor: float = 1.2) -> np.ndarra
     return np.stack([cx, cy, scale], axis=-1)
 
 
+def _load_slam_results(
+    slam_results: str | Path | np.ndarray | None,
+    length: int,
+) -> np.ndarray:
+    if slam_results is None:
+        traj = np.zeros((length, 7), dtype=np.float32)
+        traj[:, 3] = 1.0
+        return traj
+    if isinstance(slam_results, np.ndarray):
+        traj = slam_results
+    else:
+        path = Path(slam_results)
+        if path.suffix.lower() == ".npy":
+            traj = np.load(path)
+        elif path.suffix.lower() == ".npz":
+            data = np.load(path, allow_pickle=True)
+            for key in ("traj", "trajectory", "slam_results", "poses"):
+                if key in data:
+                    traj = data[key]
+                    break
+            else:
+                if len(data.files) != 1:
+                    raise ValueError(f"Unsupported SLAM npz keys: {data.files}")
+                traj = data[data.files[0]]
+        else:
+            raise ValueError(f"Unsupported SLAM file: {path}")
+
+    traj = np.asarray(traj)
+    if traj.ndim != 2 or traj.shape[1] != 7:
+        raise ValueError(f"SLAM results must be (T, 7), got {traj.shape}")
+
+    if traj.shape[0] < length:
+        pad = np.repeat(traj[-1:], length - traj.shape[0], axis=0)
+        traj = np.concatenate([traj, pad], axis=0)
+    elif traj.shape[0] > length:
+        traj = traj[:length]
+    return traj.astype(np.float32, copy=False)
+
+
 def _build_tracking_results(
     cfg: Any,
     keypoints: np.ndarray,
@@ -113,6 +152,7 @@ def run_inference(
     flip_eval: bool = False,
     save_npz: bool = True,
     save_pkl: bool = True,
+    slam_results: str | Path | np.ndarray | None = None,
 ) -> InferenceOutput:
     cfg = prepare_cfg(config_path, device=device, flip_eval=flip_eval)
 
@@ -139,8 +179,7 @@ def run_inference(
     if length <= 0:
         length = int(frame_ids.max()) + 1
 
-    slam_results = np.zeros((length, 7), dtype=np.float32)
-    slam_results[:, 3] = 1.0
+    slam_results = _load_slam_results(slam_results, length)
 
     dataset = CustomDataset(cfg, tracking_results, slam_results, width, height, fps)
 
@@ -229,6 +268,7 @@ class WHAMInference:
         output_dir: str | Path,
         save_npz: bool = True,
         save_pkl: bool = True,
+        slam_results: str | Path | np.ndarray | None = None,
     ) -> InferenceOutput:
         return run_inference(
             video=video,
@@ -239,6 +279,7 @@ class WHAMInference:
             flip_eval=self.flip_eval,
             save_npz=save_npz,
             save_pkl=save_pkl,
+            slam_results=slam_results,
         )
 
 
@@ -262,6 +303,11 @@ def main() -> None:
         action="store_true",
         help="Run flip evaluation for inference.",
     )
+    parser.add_argument(
+        "--slam-results",
+        default=None,
+        help="Optional SLAM trajectory (npy/npz) with shape (T, 7): xyz + quat(x,y,z,w).",
+    )
     parser.add_argument("--no-npz", action="store_true", help="Disable NPZ output.")
     parser.add_argument("--no-pkl", action="store_true", help="Disable PKL output.")
 
@@ -275,6 +321,7 @@ def main() -> None:
         flip_eval=args.flip_eval,
         save_npz=not args.no_npz,
         save_pkl=not args.no_pkl,
+        slam_results=args.slam_results,
     )
 
 
