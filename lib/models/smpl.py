@@ -3,10 +3,31 @@ from __future__ import print_function
 from __future__ import division
 
 import os, sys
+import inspect
+import numpy as _np_compat
 
 import torch
 import numpy as np
 from lib.utils import transforms
+
+if not hasattr(inspect, "getargspec"):
+    inspect.getargspec = inspect.getfullargspec  # chumpy compatibility on Py3.11+
+
+# numpy compatibility for chumpy on newer numpy
+if not hasattr(_np_compat, "int"):
+    _np_compat.int = int
+if not hasattr(_np_compat, "float"):
+    _np_compat.float = float
+if not hasattr(_np_compat, "bool"):
+    _np_compat.bool = bool
+if not hasattr(_np_compat, "complex"):
+    _np_compat.complex = complex
+if not hasattr(_np_compat, "object"):
+    _np_compat.object = object
+if not hasattr(_np_compat, "unicode"):
+    _np_compat.unicode = str
+if not hasattr(_np_compat, "str"):
+    _np_compat.str = str
 
 from smplx import SMPL as _SMPL
 from smplx.utils import SMPLOutput as ModelOutput

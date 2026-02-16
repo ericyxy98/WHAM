@@ -1,5 +1,8 @@
-chumpy @ git+https://github.com/mattloper/chumpy
-numpy==1.22.3
+numpy
+numba
+torch==2.5.1
+torchvision==0.20.1
+chumpy
 yacs
 joblib
 scikit-image
@@ -10,12 +13,17 @@ tensorboard
 smplx
 progress
 einops
-mmcv==1.3.9
-timm==0.4.9
+mmcv==2.1.0
+timm
 munkres
-xtcocotools>=1.8
+xtcocotools
 loguru
-setuptools==59.5.0
+setuptools
 tqdm
 ultralytics
-gdown==4.6.0
+gdown
+evo
+pypose
+kornia
+plyfile
+torch_scatter

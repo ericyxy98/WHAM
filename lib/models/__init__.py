@@ -29,7 +29,13 @@ def build_network(cfg, smpl):
     
     # Load Checkpoint
     if os.path.isfile(cfg.TRAIN.CHECKPOINT):
-        checkpoint = torch.load(cfg.TRAIN.CHECKPOINT)
+        # PyTorch >= 2.6 defaults weights_only=True, which breaks loading
+        # WHAM checkpoints saved as full pickled dicts.
+        try:
+            checkpoint = torch.load(cfg.TRAIN.CHECKPOINT, weights_only=False)
+        except TypeError:
+            # Backward compatibility for older torch versions
+            checkpoint = torch.load(cfg.TRAIN.CHECKPOINT)
         ignore_keys = ['smpl.body_pose', 'smpl.betas', 'smpl.global_orient', 'smpl.J_regressor_extra', 'smpl.J_regressor_eval']
         model_state_dict = {k: v for k, v in checkpoint['model'].items() if k not in ignore_keys}
         network.load_state_dict(model_state_dict, strict=False)
