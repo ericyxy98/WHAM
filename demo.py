@@ -34,7 +34,8 @@ def run(cfg,
         calib=None,
         run_global=True,
         save_pkl=False,
-        visualize=False):
+        visualize=False,
+        run_smplify=False):
     
     cap = cv2.VideoCapture(video)
     assert cap.isOpened(), f'Faild to load video file {video}'
@@ -139,7 +140,7 @@ def run(cfg,
                 pred = network(x, inits, features, mask=mask, init_root=init_root, cam_angvel=cam_angvel, return_y_up=True, **kwargs)
         
         # if False:
-        if args.run_smplify:
+        if run_smplify:
             smplify = TemporalSMPLify(smpl, img_w=width, img_h=height, device=cfg.DEVICE)
             input_keypoints = dataset.tracking_results[_id]['keypoints']
             pred = smplify.fit(pred, input_keypoints, **kwargs)
@@ -175,8 +176,10 @@ def run(cfg,
         from lib.vis.run_vis import run_vis_on_demo
         with torch.no_grad():
             run_vis_on_demo(cfg, video, results, output_pth, network.smpl, vis_global=run_global)
-        
-if __name__ == '__main__':
+
+    return results, tracking_results, slam_results
+
+def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--video', type=str, 
@@ -227,7 +230,11 @@ if __name__ == '__main__':
         args.calib, 
         run_global=not args.estimate_local_only, 
         save_pkl=args.save_pkl,
-        visualize=args.visualize)
+        visualize=args.visualize,
+        run_smplify=args.run_smplify)
         
     print()
     logger.info('Done !')
+
+if __name__ == '__main__':
+    main()

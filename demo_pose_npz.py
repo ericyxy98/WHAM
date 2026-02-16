@@ -145,22 +145,41 @@ def _normalize_keypoints(kp):
     return kp
 
 
-def load_pose_npz(pose_npz, max_frames=None):
-    data = np.load(pose_npz, allow_pickle=True)
-    if 'keypoints' in data:
-        keypoints = data['keypoints']
-    elif 'poses2d' in data:
-        keypoints = data['poses2d']
-    elif 'pose2d' in data:
-        keypoints = data['pose2d']
+def load_pose_data(pose_data, max_frames=None):
+    if isinstance(pose_data, (str, os.PathLike)):
+        data = np.load(pose_data, allow_pickle=True)
+        if 'keypoints' in data:
+            keypoints = data['keypoints']
+        elif 'poses2d' in data:
+            keypoints = data['poses2d']
+        elif 'pose2d' in data:
+            keypoints = data['pose2d']
+        else:
+            raise ValueError('pose npz must contain keypoints/poses2d/pose2d')
+
+        if 'frame_ids' in data:
+            frame_id = np.array(data['frame_ids'])
+        elif 'frame_id' in data:
+            frame_id = np.array(data['frame_id'])
+        else:
+            frame_id = None
+
+        if 'bbox' in data:
+            bbox = np.array(data['bbox'])
+        elif 'bboxes' in data:
+            bbox = np.array(data['bboxes'])
+        else:
+            bbox = None
     else:
-        raise ValueError('pose npz must contain keypoints/poses2d/pose2d')
+        keypoints = np.asarray(pose_data)
+        frame_id = None
+        bbox = None
     
-    if keypoints.shape[2] > 3:
+    keypoints = _normalize_keypoints(keypoints)
+
+    if keypoints.shape[-1] > 3:
         logger.warning('Keypoints have more than 3 channels, only using first 3 (x,y,conf)')
         keypoints = keypoints[..., [0, 1, 2]]
-
-    keypoints = _normalize_keypoints(keypoints)
     n_people, n_frames = keypoints.shape[0], keypoints.shape[1]
 
     if max_frames is not None:
@@ -171,23 +190,12 @@ def load_pose_npz(pose_npz, max_frames=None):
         elif n_frames < max_frames:
             logger.warning(f'Pose file has {n_frames} frames, video has {max_frames}. Using {n_frames} frames.')
 
-    if 'frame_ids' in data:
-        frame_id = np.array(data['frame_ids'])
-    elif 'frame_id' in data:
-        frame_id = np.array(data['frame_id'])
-    else:
+    if frame_id is None:
         frame_id = np.arange(n_frames)
 
     if frame_id.ndim == 2:
         frame_id = frame_id[0]
     frame_id = frame_id[:n_frames]
-
-    if 'bbox' in data:
-        bbox = np.array(data['bbox'])
-    elif 'bboxes' in data:
-        bbox = np.array(data['bboxes'])
-    else:
-        bbox = None
 
     tracking_results = defaultdict(dict)
     for pid in range(n_people):
@@ -228,15 +236,20 @@ def load_pose_npz(pose_npz, max_frames=None):
     return tracking_results
 
 
+def load_pose_npz(pose_npz, max_frames=None):
+    return load_pose_data(pose_npz, max_frames=max_frames)
+
+
 def run(cfg,
         video,
         output_pth,
         network,
-        pose_npz,
+        pose_data,
         calib=None,
         run_global=True,
         save_pkl=False,
-        visualize=False):
+        visualize=False,
+        run_smplify=False):
 
     cap = cv2.VideoCapture(video)
     assert cap.isOpened(), f'Faild to load video file {video}'
@@ -248,7 +261,7 @@ def run(cfg,
     run_global = run_global and _run_global
     with torch.no_grad():
         # Build tracking results from pose npz
-        tracking_results = load_pose_npz(pose_npz, max_frames=length)
+        tracking_results = load_pose_data(pose_data, max_frames=length)
         _sanitize_tracking_bboxes(tracking_results, width, height)
 
         # SLAM for global trajectory (optional)
@@ -318,7 +331,7 @@ def run(cfg,
                 # inference
                 pred = network(x, inits, features, mask=mask, init_root=init_root, cam_angvel=cam_angvel, return_y_up=True, **kwargs)
 
-        if args.run_smplify:
+        if run_smplify:
             smplify = TemporalSMPLify(smpl, img_w=width, img_h=height, device=cfg.DEVICE)
             input_keypoints = dataset.tracking_results[_id]['keypoints']
             pred = smplify.fit(pred, input_keypoints, **kwargs)
@@ -355,8 +368,10 @@ def run(cfg,
         with torch.no_grad():
             run_vis_on_demo(cfg, video, results, output_pth, network.smpl, vis_global=run_global)
 
+    return results, tracking_results, slam_results
 
-if __name__ == '__main__':
+
+def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--video', type=str,
@@ -411,7 +426,12 @@ if __name__ == '__main__':
         args.calib,
         run_global=not args.estimate_local_only,
         save_pkl=args.save_pkl,
-        visualize=args.visualize)
+        visualize=args.visualize,
+        run_smplify=args.run_smplify)
 
     print()
     logger.info('Done !')
+
+
+if __name__ == '__main__':
+    main()

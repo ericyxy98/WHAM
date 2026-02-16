@@ -1,41 +1,42 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "wham"
+name = "wham-reconstructed"
 version = "0.1.0"
-description = "WHAM renewed"
+description = "WHAM: world-grounded human motion reconstruction"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
+license = { text = "CC-BY-NC-SA-4.0" }
+authors = [{ name = "WHAM contributors" }]
 dependencies = [
-    "torch>=2.5.1",
-    "numba>=0.63.1",
-    "numpy>=2.3",
-    "opencv-python>=4.10",
-    "scikit-image>=0.21",
-    "scipy>=1.10",
-    "yacs>=0.1.8",
-    "joblib>=1.3",
-    "imageio[ffmpeg]>=2.31",
-    "smplx>=0.1.28",
-    "progress>=1.6",
-    "einops>=0.6",
-    "timm>=0.9",
-    "loguru>=0.7",
+  "numpy",
+  "numba",
+  "torch>=2.5.1",
+  "torchvision>=0.20.1",
+  "yacs",
+  "joblib",
+  "scikit-image",
+  "opencv-python",
+  "imageio[ffmpeg]",
+  "matplotlib",
+  "smplx",
+  "progress",
+  "einops",
+  "timm",
+  "loguru",
+  "tqdm",
+  "ultralytics",
 ]
 
 [project.optional-dependencies]
-viz = ["pytorch3d>=0.7.7"]
-slam = [
-    "matplotlib>=3.8",
-    "torchvision>=0.20",
-    "tqdm>=4.66",
-]
+slam = ["evo", "pypose", "kornia", "plyfile"]
+train = ["tensorboard", "mmcv==2.1.0", "munkres", "xtcocotools", "torch_scatter"]
 
 [project.scripts]
-wham-infer = "wham.inference:main"
-wham-render = "wham.visualize:main"
+wham-demo = "demo:main"
+wham-demo-pose-npz = "demo_pose_npz:main"
 
 [tool.setuptools]
 include-package-data = true
