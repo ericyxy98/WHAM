@@ -49,3 +49,36 @@ wget https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.zip
 unzip eigen-3.4.0.zip -d thirdparty
 pip install -e --no-build-isolation .
 ```
+
+## Install as a package
+
+```bash
+pip install -e .
+```
+
+## Python API
+
+```python
+import numpy as np
+from wham import WHAMRunner
+
+runner = WHAMRunner()
+
+# 1) Same flow as demo_pose_npz.py (load 2D poses from npz)
+results, tracking_results, slam_results = runner.run(
+    video="examples/drone_video.mp4",
+    pose_npz="path/to/poses.npz",
+)
+
+# 2) Same flow as demo_pose_npz.py, but pass keypoints directly as ndarray
+keypoints = np.random.rand(1, 100, 17, 3).astype(np.float32)
+results, tracking_results, slam_results = runner.run(
+    video="examples/drone_video.mp4",
+    pose_keypoints=keypoints,
+)
+
+# 3) Fallback to original WHAM behavior (detector/tracker preprocessing)
+results, tracking_results, slam_results = runner.run(
+    video="examples/drone_video.mp4",
+)
+```
