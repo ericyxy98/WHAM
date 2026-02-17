@@ -40,8 +40,7 @@ dependencies = [
 ]
 
 [project.scripts]
-wham-demo = "run:main"
-wham-demo-pose-npz = "run:main_pose_npz"
+wham = "wham.cli:main"
 
 [tool.setuptools]
 include-package-data = true

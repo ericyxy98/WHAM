@@ -56,10 +56,5 @@ def main():
     _run_from_args(args)
 
 
-def main_pose_npz():
-    # Backward-compatible entrypoint alias.
-    main()
-
-
 if __name__ == "__main__":
     main()

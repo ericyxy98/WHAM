@@ -54,6 +54,35 @@ unzip eigen-3.4.0.zip -d thirdparty
 pip install -e --no-build-isolation .
 ```
 
+## CLI Usage
+
+Run with pose NPZ input:
+
+```bash
+wham \
+  --video examples/drone_video.mp4 \
+  --pose_npz path/to/poses.npz
+```
+
+Run in local-coordinate mode (disable global SLAM):
+
+```bash
+wham \
+  --video examples/drone_video.mp4 \
+  --pose_npz path/to/poses.npz \
+  --estimate_local_only
+```
+
+Enable visualization and save output:
+
+```bash
+wham \
+  --video examples/drone_video.mp4 \
+  --pose_npz path/to/poses.npz \
+  --visualize \
+  --save_pkl
+```
+
 ## Python API
 
 ```python
@@ -66,6 +95,7 @@ runner = WHAMRunner()
 results, tracking_results, slam_results = runner.run(
     video="examples/drone_video.mp4",
     pose_npz="path/to/poses.npz",
+    visualize=True,
 )
 
 # 2) Pose-array flow (pass keypoints directly as ndarray)
@@ -73,6 +103,7 @@ keypoints = np.random.rand(1, 100, 17, 3).astype(np.float32)
 results, tracking_results, slam_results = runner.run(
     video="examples/drone_video.mp4",
     pose_keypoints=keypoints,
+    visualize=True,
 )
 
 # Note: pose input is required (pose_npz or pose_keypoints).
