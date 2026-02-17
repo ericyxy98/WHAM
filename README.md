@@ -37,9 +37,15 @@ Run `fetch_demo_data.sh`, or manually prepare data, including:
 
 Then, set up the environment as follows:
 
+Create conda env (optional):
 ```bash
 conda create -n wham python=3.11
 conda activate wham
+```
+
+Install as a package:
+
+```bash
 pip install -e .
 ```
 
@@ -51,7 +57,7 @@ pip install --no-build-isolation "git+https://github.com/facebookresearch/pytorc
 cd third-party/DPVO
 wget https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.zip
 unzip eigen-3.4.0.zip -d thirdparty
-pip install -e --no-build-isolation .
+pip install --no-build-isolation -e .
 ```
 
 ## CLI Usage
