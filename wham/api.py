@@ -19,9 +19,9 @@ def prepare_cfg(config_path: str = "configs/yamls/demo.yaml"):
 class WHAMRunner:
     """High-level API for running WHAM inference.
 
-    If `pose_npz` is given, use keypoints from NPZ like `demo_pose_npz.py`.
+    If `pose_npz` is given, use keypoints from NPZ.
     If `pose_keypoints` is given, use the provided numpy array directly.
-    If neither is provided, fallback to full detector/tracker preprocessing like `demo.py`.
+    One of `pose_npz` or `pose_keypoints` must be provided.
     """
 
     def __init__(self, cfg=None):
@@ -45,35 +45,24 @@ class WHAMRunner:
     ) -> tuple[dict[int, dict[str, Any]], dict, Any]:
         if pose_npz is not None and pose_keypoints is not None:
             raise ValueError("Provide only one of `pose_npz` or `pose_keypoints`.")
+        if pose_npz is None and pose_keypoints is None:
+            raise ValueError(
+                "Pose input is required. Provide `pose_npz` or `pose_keypoints`."
+            )
 
         sequence = ".".join(video.split("/")[-1].split(".")[:-1])
         output_pth = osp.join(output_dir, sequence)
         os.makedirs(output_pth, exist_ok=True)
 
-        if pose_npz is not None or pose_keypoints is not None:
-            from demo_pose_npz import run as run_pose
+        from wham.pipeline import run_pose_demo
 
-            pose_data = pose_npz if pose_npz is not None else np.asarray(pose_keypoints)
-            return run_pose(
-                self.cfg,
-                video,
-                output_pth,
-                self.network,
-                pose_data,
-                calib,
-                run_global=run_global,
-                save_pkl=save_pkl,
-                visualize=visualize,
-                run_smplify=run_smplify,
-            )
-
-        from demo import run as run_default
-
-        return run_default(
+        pose_data = pose_npz if pose_npz is not None else np.asarray(pose_keypoints)
+        return run_pose_demo(
             self.cfg,
             video,
             output_pth,
             self.network,
+            pose_data,
             calib,
             run_global=run_global,
             save_pkl=save_pkl,

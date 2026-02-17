@@ -3,7 +3,7 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "wham-reconstructed"
+name = "wham"
 version = "0.1.0"
 description = "WHAM: world-grounded human motion reconstruction"
 readme = "README.md"
@@ -11,12 +11,13 @@ requires-python = ">=3.10"
 license = { text = "CC-BY-NC-SA-4.0" }
 authors = [{ name = "WHAM contributors" }]
 dependencies = [
-  "numpy",
+  "numpy<=2.3.5",
   "numba",
-  "torch>=2.5.1",
-  "torchvision>=0.20.1",
+  "torch<=2.5.1",
+  "torchvision<=0.20.1",
   "yacs",
   "joblib",
+  "chumpy",
   "scikit-image",
   "opencv-python",
   "imageio[ffmpeg]",
@@ -27,16 +28,20 @@ dependencies = [
   "timm",
   "loguru",
   "tqdm",
-  "ultralytics",
+  "evo",
+  "pypose",
+  "kornia",
+  "plyfile",
+  "torch_scatter",
+  "tensorboard", 
+  "mmcv==2.1.0",
+  "munkres", 
+  "setuptools<81",
 ]
 
-[project.optional-dependencies]
-slam = ["evo", "pypose", "kornia", "plyfile"]
-train = ["tensorboard", "mmcv==2.1.0", "munkres", "xtcocotools", "torch_scatter"]
-
 [project.scripts]
-wham-demo = "demo:main"
-wham-demo-pose-npz = "demo_pose_npz:main"
+wham-demo = "run:main"
+wham-demo-pose-npz = "run:main_pose_npz"
 
 [tool.setuptools]
 include-package-data = true

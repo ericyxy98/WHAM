@@ -11,10 +11,9 @@ Run `fetch_demo_data.sh`, or manually prepare data, including:
 ├── checkpoints
 │   ├── dpvo.pth
 │   ├── hmr2a.ckpt
-│   ├── vitpose-h-multi-coco.pth
 │   ├── wham_vit_bedlam_w_3dpw.pth.tar
 │   ├── wham_vit_w_3dpw.pth.tar
-│   └── yolov8x.pt
+│   └── (optional) other custom assets
 ├── dataset
 │   └── body_models
 │       ├── coco_aug_dict.pth
@@ -41,19 +40,18 @@ Then, set up the environment as follows:
 ```bash
 conda create -n wham python=3.11
 conda activate wham
-pip install -r requirements.txt
+pip install -e .
+```
+
+For visualization and SLAM:
+
+```bash
 pip install --no-build-isolation "git+https://github.com/facebookresearch/pytorch3d.git"
 
 cd third-party/DPVO
 wget https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.zip
 unzip eigen-3.4.0.zip -d thirdparty
 pip install -e --no-build-isolation .
-```
-
-## Install as a package
-
-```bash
-pip install -e .
 ```
 
 ## Python API
@@ -64,21 +62,18 @@ from wham import WHAMRunner
 
 runner = WHAMRunner()
 
-# 1) Same flow as demo_pose_npz.py (load 2D poses from npz)
+# 1) Pose-NPZ flow (load 2D poses from npz)
 results, tracking_results, slam_results = runner.run(
     video="examples/drone_video.mp4",
     pose_npz="path/to/poses.npz",
 )
 
-# 2) Same flow as demo_pose_npz.py, but pass keypoints directly as ndarray
+# 2) Pose-array flow (pass keypoints directly as ndarray)
 keypoints = np.random.rand(1, 100, 17, 3).astype(np.float32)
 results, tracking_results, slam_results = runner.run(
     video="examples/drone_video.mp4",
     pose_keypoints=keypoints,
 )
 
-# 3) Fallback to original WHAM behavior (detector/tracker preprocessing)
-results, tracking_results, slam_results = runner.run(
-    video="examples/drone_video.mp4",
-)
+# Note: pose input is required (pose_npz or pose_keypoints).
 ```

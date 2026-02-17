@@ -1,4 +1,4 @@
-numpy
+numpy==2.3.5
 numba
 torch==2.5.1
 torchvision==0.20.1
@@ -16,11 +16,9 @@ einops
 mmcv==2.1.0
 timm
 munkres
-xtcocotools
 loguru
-setuptools
+setuptools<81
 tqdm
-ultralytics
 gdown
 evo
 pypose
